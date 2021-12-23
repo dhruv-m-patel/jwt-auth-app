@@ -1,16 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import "./index.css";
+import { BrowserRouter } from "react-router-dom";
+import CssBaseline from "@mui/material/CssBaseline";
 import reportWebVitals from "./reportWebVitals";
 import Router from "./components/router";
-import { BrowserRouter } from "react-router-dom";
+import "./index.css";
 
 ReactDOM.render(
     <React.StrictMode>
-        <h1>Hello</h1>
-        <BrowserRouter>
-            <Router />
-        </BrowserRouter>
+        <CssBaseline enableColorScheme>
+            <BrowserRouter>
+                <Router />
+            </BrowserRouter>
+        </CssBaseline>
     </React.StrictMode>,
     document.getElementById("root")
 );
