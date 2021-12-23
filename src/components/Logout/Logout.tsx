@@ -1,5 +1,6 @@
 import React from "react";
+import Page from "../Page";
 
 export default function Logout(): JSX.Element {
-    return <h1>Logout</h1>;
+    return <Page>Logout</Page>;
 }

@@ -1,5 +1,6 @@
 import React from "react";
+import Page from "../Page";
 
 export default function Login(): JSX.Element {
-    return <h1>Login</h1>;
+    return <Page>Login</Page>;
 }

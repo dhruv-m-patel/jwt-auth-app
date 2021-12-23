@@ -1,5 +1,6 @@
 import React from "react";
+import Page from "../Page";
 
 export default function Home(): JSX.Element {
-    return <h1>Home</h1>;
+    return <Page>Home</Page>;
 }
