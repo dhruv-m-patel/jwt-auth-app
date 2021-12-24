@@ -1,11 +1,39 @@
+import React, { useState, useCallback, ChangeEvent, useContext } from "react";
+import { Link, Navigate } from "react-router-dom";
 import { Button, Input, Typography } from "@mui/material";
-import React from "react";
-import { Link } from "react-router-dom";
 import Center from "../Center";
 import Frame from "../Frame";
 import Page from "../Page";
+import { login } from "../../lib/auth";
+import AuthContext, { AuthContextValue } from "../../context/authContext";
 
 export default function Login(): JSX.Element {
+    const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const { tokens } = useContext<AuthContextValue>(AuthContext);
+
+    const handleEmailChange = useCallback(
+        (e: ChangeEvent<HTMLInputElement>) => {
+            setEmail(e.target.value);
+        },
+        []
+    );
+
+    const handlePasswordChange = useCallback(
+        (e: ChangeEvent<HTMLInputElement>) => {
+            setPassword(e.target.value);
+        },
+        []
+    );
+
+    const handleLogin = useCallback(() => {
+        login(email, password);
+    }, [email, password]);
+
+    if (tokens?.accessToken && tokens?.refreshToken) {
+        return <Navigate to="/home" />;
+    }
+
     return (
         <Page>
             <Frame title="Login">
@@ -17,6 +45,8 @@ export default function Login(): JSX.Element {
                     }}
                     fullWidth
                     placeholder="Email"
+                    value={email}
+                    onChange={handleEmailChange}
                 />
                 <p />
                 <Input
@@ -27,6 +57,8 @@ export default function Login(): JSX.Element {
                     }}
                     fullWidth
                     placeholder="Password"
+                    value={password}
+                    onChange={handlePasswordChange}
                 />
                 <p />
                 <p />
@@ -36,6 +68,7 @@ export default function Login(): JSX.Element {
                     color="primary"
                     data-testid="loginButton"
                     fullWidth
+                    onClick={handleLogin}
                 >
                     Login
                 </Button>
