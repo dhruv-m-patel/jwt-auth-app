@@ -50,12 +50,14 @@ export async function register(email: string, password: string) {
 }
 
 export async function logout() {
-    const res = await axios.delete(getApiUrl("/logout"), {
-        headers: {
-            Authorization: `Bearer ${store.get("ACCESS_TOKEN")}`,
-        },
-    });
-    if (res.status >= 200) {
+    try {
+        await axios.delete(getApiUrl("/logout"), {
+            headers: {
+                Authorization: `Bearer ${store.get("ACCESS_TOKEN")}`,
+            },
+        });
+    } catch {
+    } finally {
         store.clearAll();
         window.location.href = "/login";
     }
