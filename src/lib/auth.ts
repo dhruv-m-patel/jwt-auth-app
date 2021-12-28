@@ -41,6 +41,7 @@ export async function register(email: string, password: string) {
         password,
     });
     if (res.status >= 200) {
+        alert("Your account has been created");
         setTimeout(() => {
             window.location.href = "/login";
         }, 1000);
