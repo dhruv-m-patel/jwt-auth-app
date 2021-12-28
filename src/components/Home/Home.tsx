@@ -5,7 +5,7 @@ import { Alert, Button, Container } from "@mui/material";
 import AuthContext, { AuthContextValue } from "../../context/authContext";
 import Page from "../Page";
 import Center from "../Center";
-import { logout, refreshSession } from "../../lib/auth";
+import { logout, refreshSession, verifySession } from "../../lib/auth";
 
 export default function Home(): JSX.Element {
     const { tokens } = useContext<AuthContextValue>(AuthContext);
@@ -20,6 +20,10 @@ export default function Home(): JSX.Element {
     const handleLogout = useCallback(() => {
         logout();
     }, []);
+
+    useEffect(() => {
+        verifySession();
+    });
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
