@@ -1,45 +1,94 @@
-import React, { useCallback, useContext, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import React, { useCallback, useEffect, useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import jwtDecode from "jwt-decode";
 import { Alert, Button, Container } from "@mui/material";
-import AuthContext, { AuthContextValue } from "../../context/authContext";
 import Page from "../Page";
 import Center from "../Center";
 import { logout, refreshSession, verifySession } from "../../lib/auth";
+import { useStore } from "../../store";
+import axios from "axios";
 
 export default function Home(): JSX.Element {
-    const { tokens } = useContext<AuthContextValue>(AuthContext);
+    const store = useStore();
+    const navigate = useNavigate();
+    const [refreshError, setRefreshError] = useState<string>("");
 
     const handleRefreshTokens = useCallback(() => {
-        refreshSession();
-        setTimeout(() => {
-            window.location.reload();
-        }, 1 * 1000);
-    }, []);
+        const doSessionRefresh = async () => {
+            try {
+                const res = await refreshSession();
+                store.setTokens(res.data);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1 * 1000);
+            } catch (err) {
+                if (axios.isAxiosError(err)) {
+                    setRefreshError(err.response?.data?.message);
+                } else {
+                    setRefreshError("Unable to refresh tokens");
+                }
+            }
+        };
+        doSessionRefresh();
+    }, [store]);
 
     const handleLogout = useCallback(() => {
-        logout();
-    }, []);
+        const attemptLogout = async () => {
+            try {
+                await logout();
+            } catch (err) {
+                console.error(err);
+            } finally {
+                store.clearTokens();
+                navigate("/login");
+            }
+        };
+        attemptLogout();
+    }, [store, navigate]);
 
     useEffect(() => {
-        verifySession();
+        const checkSession = async () => {
+            try {
+                const res = await verifySession();
+                if (!res.data.valid) {
+                    store.clearTokens();
+                    navigate("/login");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        checkSession();
     });
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
-        if (tokens?.accessTokenExpiresIn) {
-            timer = setTimeout(() => {
-                refreshSession();
-            }, tokens.accessTokenExpiresIn * 1000);
+        if (store.tokens?.accessTokenExpiresIn) {
+            const autoRefreshTokens = () => {
+                timer = setTimeout(async () => {
+                    try {
+                        const res = await refreshSession();
+                        store.setTokens(res.data);
+                        window.location.reload();
+                    } catch (err) {
+                        if (axios.isAxiosError(err)) {
+                            setRefreshError(err.response?.data?.message);
+                        } else {
+                            setRefreshError("Unable to auto-refresh tokens");
+                        }
+                    }
+                }, Number(store.tokens?.accessTokenExpiresIn || 2000) * 1000);
+            };
+            autoRefreshTokens();
         }
         return () => {
             if (timer) {
                 clearTimeout(timer);
             }
         };
-    }, [tokens]);
+    }, [store]);
 
-    if (!tokens?.accessToken || !tokens?.refreshToken) {
+    if (!store.tokens?.accessToken || !store.tokens?.refreshToken) {
         return <Navigate to="/login" />;
     }
 
@@ -49,7 +98,8 @@ export default function Home(): JSX.Element {
             <Alert color="info" icon={false}>
                 <strong>
                     The page is set to auto-refresh tokens before the Access
-                    Token expires in {tokens.accessTokenExpiresIn} seconds.
+                    Token expires in {store.tokens.accessTokenExpiresIn}{" "}
+                    seconds.
                     <br />
                     You can observe network calls to verify token refresh.
                 </strong>
@@ -58,21 +108,22 @@ export default function Home(): JSX.Element {
             <Alert color="success" icon={false}>
                 <Container>
                     <code>
-                        <strong>accessToken:</strong> {tokens.accessToken}
+                        <strong>accessToken:</strong> {store.tokens.accessToken}
                         <br />
                         <strong>accessTokenExpiry:</strong>{" "}
-                        {tokens.accessTokenExpiry}
+                        {store.tokens.accessTokenExpiry}
                         <br />
                         <strong>accessTokenExpiresIn:</strong>{" "}
-                        {tokens.accessTokenExpiresIn} seconds
+                        {store.tokens.accessTokenExpiresIn} seconds
                         <br />
-                        <strong>refreshToken:</strong> {tokens.refreshToken}
+                        <strong>refreshToken:</strong>{" "}
+                        {store.tokens.refreshToken}
                         <br />
                         <strong>refreshTokenExpiry:</strong>{" "}
-                        {tokens.refreshTokenExpiry}
+                        {store.tokens.refreshTokenExpiry}
                         <br />
                         <strong>refreshTokenExpiresIn:</strong>{" "}
-                        {tokens.refreshTokenExpiresIn} seconds
+                        {store.tokens.refreshTokenExpiresIn} seconds
                     </code>
                 </Container>
             </Alert>
@@ -82,9 +133,7 @@ export default function Home(): JSX.Element {
                     <code
                         dangerouslySetInnerHTML={{
                             __html: JSON.stringify(
-                                jwtDecode(tokens.accessToken),
-                                null,
-                                "\t"
+                                jwtDecode(store.tokens.accessToken)
                             ),
                         }}
                     />
@@ -92,6 +141,15 @@ export default function Home(): JSX.Element {
             </Alert>
             <br />
             <br />
+            {!!refreshError && (
+                <React.Fragment>
+                    <Alert color="error" icon={false}>
+                        {refreshError}
+                    </Alert>
+                    <br />
+                    <br />
+                </React.Fragment>
+            )}
             <Center>
                 <Button
                     variant="contained"

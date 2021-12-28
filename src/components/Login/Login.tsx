@@ -1,16 +1,20 @@
-import React, { useState, useCallback, ChangeEvent, useContext } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { Button, Input, Typography } from "@mui/material";
+import React, { useState, useCallback, ChangeEvent } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Alert, Button, Input, Typography } from "@mui/material";
+import validator from "validator";
 import Center from "../Center";
 import Frame from "../Frame";
 import Page from "../Page";
 import { login } from "../../lib/auth";
-import AuthContext, { AuthContextValue } from "../../context/authContext";
+import { useStore } from "../../store";
+import axios from "axios";
 
 export default function Login(): JSX.Element {
+    const store = useStore();
+    const navigate = useNavigate();
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
-    const { tokens } = useContext<AuthContextValue>(AuthContext);
+    const [loginError, setLoginError] = useState<string>("");
 
     const handleEmailChange = useCallback(
         (e: ChangeEvent<HTMLInputElement>) => {
@@ -27,10 +31,23 @@ export default function Login(): JSX.Element {
     );
 
     const handleLogin = useCallback(() => {
-        login(email, password);
-    }, [email, password]);
+        const attemptLogin = async () => {
+            try {
+                const res = await login(email, password);
+                store.setTokens(res.data);
+                navigate("/home");
+            } catch (err) {
+                if (axios.isAxiosError(err)) {
+                    setLoginError(err.response?.data?.message);
+                } else {
+                    setLoginError("Credentials could not be verified");
+                }
+            }
+        };
+        attemptLogin();
+    }, [email, password, store, navigate]);
 
-    if (tokens?.accessToken && tokens?.refreshToken) {
+    if (store.tokens?.accessToken && store.tokens?.refreshToken) {
         return <Navigate to="/home" />;
     }
 
@@ -62,6 +79,15 @@ export default function Login(): JSX.Element {
                 />
                 <p />
                 <p />
+                {!!loginError && (
+                    <React.Fragment>
+                        <Alert color="error" icon={false}>
+                            {loginError}
+                        </Alert>
+                        <br />
+                        <br />
+                    </React.Fragment>
+                )}
                 <Button
                     size="large"
                     variant="contained"
@@ -69,6 +95,12 @@ export default function Login(): JSX.Element {
                     data-testid="loginButton"
                     fullWidth
                     onClick={handleLogin}
+                    disabled={
+                        !email ||
+                        !password ||
+                        !validator.isEmail(email) ||
+                        !validator.isStrongPassword(password)
+                    }
                 >
                     Login
                 </Button>
