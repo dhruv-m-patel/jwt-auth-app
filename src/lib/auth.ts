@@ -57,6 +57,7 @@ export async function logout() {
     });
     if (res.status >= 200) {
         store.clearAll();
+        window.location.href = "/login";
     }
 }
 
