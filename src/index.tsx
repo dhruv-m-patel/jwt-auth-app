@@ -4,17 +4,18 @@ import { BrowserRouter } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
 import reportWebVitals from "./reportWebVitals";
 import Router from "./components/router";
-import AuthContext from "./context/authContext";
-import { getTokens } from "./lib/auth";
+import { TokenStore, StoreProvider } from "./store";
 import "./index.css";
+
+const store = new TokenStore();
 
 ReactDOM.render(
     <React.StrictMode>
         <CssBaseline enableColorScheme>
             <BrowserRouter>
-                <AuthContext.Provider value={{ tokens: getTokens() }}>
+                <StoreProvider store={store}>
                     <Router />
-                </AuthContext.Provider>
+                </StoreProvider>
             </BrowserRouter>
         </CssBaseline>
     </React.StrictMode>,
