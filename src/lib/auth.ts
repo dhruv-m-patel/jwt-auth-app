@@ -4,22 +4,28 @@ import getApiUrl from "../utils/getApiUrl";
 
 function setTokens(tokens: {
     accessToken: string;
-    refreshToken: string;
+    accessTokenExpiry: string;
     accessTokenExpiresIn: number;
+    refreshToken: string;
+    refreshTokenExpiry: string;
     refreshTokenExpiresIn: number;
 }) {
     store.set("ACCESS_TOKEN", tokens.accessToken);
-    store.set("ACCESS_TOKEN_EXPIRY", tokens.accessTokenExpiresIn);
+    store.set("ACCESS_TOKEN_EXPIRY", tokens.accessTokenExpiry);
+    store.set("ACCESS_TOKEN_EXPIRES_IN", tokens.accessTokenExpiresIn);
     store.set("REFRESH_TOKEN", tokens.refreshToken);
-    store.set("REFRESH_TOKEN_EXPIRY", tokens.refreshTokenExpiresIn);
+    store.set("REFRESH_TOKEN_EXPIRY", tokens.refreshTokenExpiry);
+    store.set("REFRESH_TOKEN_EXPIRES_IN", tokens.refreshTokenExpiresIn);
 }
 
 export function getTokens() {
     return {
         accessToken: store.get("ACCESS_TOKEN"),
-        accessTokenExpiresIn: Number(store.get("ACCESS_TOKEN_EXPIRY")),
+        accessTokenExpiry: store.get("ACCESS_TOKEN_EXPIRY"),
+        accessTokenExpiresIn: Number(store.get("ACCESS_TOKEN_EXPIRES_IN")),
         refreshToken: store.get("REFRESH_TOKEN"),
-        refreshTokenExpiresIn: Number(store.get("REFRESH_TOKEN_EXPIRY")),
+        refreshTokenExpiry: store.get("REFRESH_TOKEN_EXPIRY"),
+        refreshTokenExpiresIn: Number(store.get("REFRESH_TOKEN_EXPIRES_IN")),
     };
 }
 
